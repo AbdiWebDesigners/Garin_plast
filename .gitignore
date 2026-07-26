@@ -1,0 +1,40 @@
+# Config
+includes/config.php
+
+# Database
+*.sql
+*.sqlite
+*.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+cache/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Composer
+/vendor/
+
+# Environment
+.env
+.env.*
+
+# Large uploaded files
+uploads/products/*
+!uploads/products/index.php
+
+uploads/customers/*
+!uploads/customers/index.php
+
+uploads/suppliers/*
+!uploads/suppliers/index.php
