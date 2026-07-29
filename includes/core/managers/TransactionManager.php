@@ -112,3 +112,110 @@ class TransactionManager
 
     }
 }
+/**
+ * دریافت همه تراکنش‌های یک کالا
+ */
+public function findByItem(
+    string $itemType,
+    int $itemId
+): array
+{
+    $sql = "
+        SELECT *
+        FROM inventory_transactions
+        WHERE item_type = ?
+        AND item_id = ?
+        ORDER BY transaction_date ASC,id ASC
+    ";
+
+    $stmt = $this->pdo->prepare($sql);
+
+    $stmt->execute([
+        $itemType,
+        $itemId
+    ]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * دریافت آخرین تراکنش کالا
+ */
+public function getLastTransaction(
+    string $itemType,
+    int $itemId,
+    int $warehouseId
+): ?array
+{
+    $sql = "
+        SELECT *
+        FROM inventory_transactions
+        WHERE item_type = ?
+        AND item_id = ?
+        AND warehouse_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+    ";
+
+    $stmt = $this->pdo->prepare($sql);
+
+    $stmt->execute([
+        $itemType,
+        $itemId,
+        $warehouseId
+    ]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $row ?: null;
+}
+
+/**
+ * موجودی یک کالا از روی تراکنش‌ها
+ */
+public function getCurrentBalance(
+    string $itemType,
+    int $itemId,
+    int $warehouseId
+): float
+{
+    $sql = "
+        SELECT
+            SUM(
+                CASE
+
+                    WHEN transaction_type IN
+                    (
+                        'initial_stock',
+                        'purchase',
+                        'production',
+                        'customer_return',
+                        'inventory_adjustment'
+                    )
+
+                    THEN quantity
+
+                    ELSE -quantity
+
+                END
+            ) balance
+
+        FROM inventory_transactions
+
+        WHERE item_type=?
+
+        AND item_id=?
+
+        AND warehouse_id=?
+    ";
+
+    $stmt = $this->pdo->prepare($sql);
+
+    $stmt->execute([
+        $itemType,
+        $itemId,
+        $warehouseId
+    ]);
+
+    return (float)$stmt->fetchColumn();
+}
