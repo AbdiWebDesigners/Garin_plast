@@ -1,73 +1,18 @@
-/*
-|--------------------------------------------------------------------------
-| ثبت Header رسید
-|--------------------------------------------------------------------------
-*/
+public function store(array $data): array
+{
+    $this->pdo->beginTransaction();
 
-$sql = "
-    INSERT INTO goods_receipts
-    (
-        warehouse_id,
-        supplier_id,
-        receipt_date,
-        description,
-        created_by,
-        created_at
-    )
-    VALUES
-    (
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        NOW()
-    )
-";
+    $receiptId = $this->headerService->save($data);
 
-$stmt = $this->pdo->prepare($sql);
+    $this->itemService->save($receiptId, $data['items']);
 
-$stmt->execute([
-    $warehouseId,
-    $supplierId,
-    $receiptDate,
-    $description,
-    $createdBy
-]);
+    $this->inventoryService->update($receiptId);
 
-$receiptId = (int)$this->pdo->lastInsertId();
+    $this->transactionService->create($receiptId);
 
-if ($receiptId <= 0) {
+    $this->pdo->commit();
 
-    throw new Exception("خطا در ایجاد رسید انبار.");
-
-}
-        return [
-
-            'success' => true,
-
-            'message' => 'Validation Passed'
-
-        ];
-
-    }
-
-    catch (Exception $e) {
-
-        if ($this->pdo->inTransaction()) {
-
-            $this->pdo->rollBack();
-
-        }
-
-        return [
-
-            'success' => false,
-
-            'message' => $e->getMessage()
-
-        ];
-
-    }
-
+    return [
+        'success' => true
+    ];
 }
